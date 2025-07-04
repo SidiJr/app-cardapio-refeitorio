@@ -1,53 +1,22 @@
-import { View, Text, StyleSheet } from 'react-native';
-import CustomButton from '../../components/CustomButton';
+import Calendar from "@/components/Calendar";
+import { View, Text, StyleSheet } from "react-native";
 
 export default function HomeScreen() {
   return (
-    <View style={styles.container}>
+    <View>
       <Text style={styles.title}>Bem-vindo ao Cardápio Virtual!</Text>
-      
-      <View style={styles.buttonsContainer}>
-        {/* Botão Cardápios */}
-        <CustomButton
-          href="/menus"
-          variant="primary"
-          size="lg"
-          style={styles.button}
-        >
-          Ver Cardápios
-        </CustomButton>
 
-        {/* Botão Refeições */}
-        <CustomButton
-          href="/meals"
-          variant="secondary"
-          size="lg"
-          style={styles.button}
-        >
-          Ver Refeições
-        </CustomButton>
-      </View>
+      <Calendar />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-  },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 32,
-    color: '#1e293b',
-  },
-  buttonsContainer: {
-    gap: 16,
-  },
-  button: {
-    width: '100%',
+    color: "#1e293b",
   },
 });

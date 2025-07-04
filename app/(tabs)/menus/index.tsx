@@ -1,5 +1,6 @@
+import CustomButton from "@/components/CustomButton";
 import { Table } from "@/components/Table";
-import { View, Text } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 
 export default function MenusList() {
   interface Column {
@@ -22,9 +23,29 @@ export default function MenusList() {
   ];
 
   return (
-    <View>
-      <Text>Lista de Cardápios</Text>
-      <Table<Cardapio> columns={columns} route="/cardapio" />
+    <View style={styles.container}>
+      <Text style={styles.title}>Lista de Cardápios</Text>
+
+      <CustomButton href="/menus/form" style={styles.button}>
+        Novo Cardápio
+      </CustomButton>
+
+      <Table<Cardapio> columns={columns} route="/cardapio" editRoute="menus"/>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+    gap: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1f2937",
+  },
+  button: {
+    alignSelf: "flex-start",
+  },
+});
