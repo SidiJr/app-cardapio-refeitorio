@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BaseForm, Field } from "@/components/Form";
+import api from "@/api";
 
 enum TipoCardapio {
   Almoco = 0,
@@ -11,24 +12,47 @@ interface Menu {
   codigo: string;
   data_cardapio: Date;
   tipo_cardapio: number;
+  pratos?: string[];
 }
 
 export const FormMenu = () => {
-  const fields: Field<Menu>[] = [
-  { name: "codigo", label: "Código", type: "text" },
-  { name: "data_cardapio", label: "Data", type: "date" },
-  { 
-    name: "tipo_cardapio", 
-    label: "Tipo do Cardápio", 
-    type: "select",
-    options: [
-      { label: "Almoço", value: "0" },
-      { label: "Janta", value: "1" }
-    ]
-  },
-];
+  const [pratoOptions, setPratoOptions] = useState<
+    { label: string; value: string }[]
+  >([]);
 
-  return <BaseForm<Menu> fields={fields} route="cardapio" navigate="/menus"/>;
+  useEffect(() => {
+    api.get("/prato").then((res) => {
+      setPratoOptions(
+        res.data.map((prato: any) => ({
+          label: prato.nome,
+          value: String(prato.id),
+        }))
+      );
+    });
+  }, []);
+
+  const fields: Field<Menu>[] = [
+    { name: "codigo", label: "Código", type: "text" },
+    { name: "data_cardapio", label: "Data", type: "date" },
+    {
+      name: "tipo_cardapio",
+      label: "Tipo do Cardápio",
+      type: "select",
+      options: [
+        { label: "Almoço", value: "0" },
+        { label: "Janta", value: "1" },
+      ],
+    },
+    {
+      name: "pratos",
+      label: "Pratos",
+      type: "select",
+      options: pratoOptions,
+      multiple: true,
+    },
+  ];
+
+  return <BaseForm<Menu> fields={fields} route="cardapio" navigate="/menus" />;
 };
 
 export default FormMenu;

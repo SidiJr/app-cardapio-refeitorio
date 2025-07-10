@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import Input from "@/components/Input";
 import CustomButton from "@/components/CustomButton";
+import Toast from "react-native-toast-message";
 
 interface Option {
   label: string;
@@ -15,6 +16,7 @@ export interface Field<T> {
   label: string;
   type?: "number" | "text" | "date" | "select";
   options?: Option[];
+  multiple?: boolean;
 }
 
 interface FormViewProps<T> {
@@ -26,7 +28,7 @@ interface FormViewProps<T> {
 export const BaseForm = <T extends Record<string, any>>({
   fields,
   route,
-  navigate
+  navigate,
 }: FormViewProps<T>) => {
   const { id } = useLocalSearchParams() as { id?: string };
   const [formData, setFormData] = useState<Partial<T>>({});
@@ -34,19 +36,22 @@ export const BaseForm = <T extends Record<string, any>>({
   useEffect(() => {
     const fetchData = async () => {
       if (id) {
-        try {
-          const response = await api.get<T>(`${route}/${id}`);
-          setFormData(response.data);
-        } catch (error) {
-          console.log(error);
+        const response = await api.get(`${route}/${id}`);
+        let data = response.data;
+        if (
+          Array.isArray(data.pratos) &&
+          data.pratos.length &&
+          typeof data.pratos[0] === "object"
+        ) {
+          data.pratos = data.pratos.map((p: any) => String(p.id));
         }
+        setFormData(data);
       }
     };
-
     fetchData();
   }, [route, id]);
 
-  const handleChange = (name: keyof T, value: string) => {
+  const handleChange = (name: keyof T, value: string | string[]) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -62,29 +67,56 @@ export const BaseForm = <T extends Record<string, any>>({
         : await api.post(route, formData);
 
       if ([200, 201].includes(response.status)) {
-        window.alert("Sucesso: Dados salvos com sucesso!");
-         router.push(navigate as any);
+        Toast.show({
+          type: "success",
+          text1: "Sucesso",
+          text2: "Dados salvos com sucesso!",
+        });
+        router.push(navigate as any);
       } else {
-        window.alert("Erro: Resposta inesperada do servidor.");
+        Toast.show({
+          type: "error",
+          text1: "Erro",
+          text2: "Resposta inesperada do servidor.",
+        });
       }
     } catch (error) {
       console.error("Erro ao enviar dados:", error);
-      window.alert("Erro: Não foi possível salvar os dados.");
+      Toast.show({
+        type: "error",
+        text1: "Erro",
+        text2: "Não foi possível salvar os dados.",
+      });
     }
   };
 
   return (
     <View style={styles.container}>
-      {fields.map((field) => (
-        <Input
-          key={`input-${String(field.name)}`}
-          label={field.label}
-          value={formData[field.name]?.toString() || ""}
-          onChangeText={(text) => handleChange(field.name, text)}
-          type={field.type}
-          options={field.options || []}
-        />
-      ))}
+      {fields.map((field) => {
+        let value: string | string[] = "";
+        if (field.multiple) {
+          const v = formData[field.name];
+          if (Array.isArray(v)) value = v.map(String);
+          else if (typeof v === "string") value = [v];
+          else value = [];
+        } else {
+          value =
+            formData[field.name] !== undefined
+              ? String(formData[field.name])
+              : "";
+        }
+        return (
+          <Input
+            key={`input-${String(field.name)}`}
+            label={field.label}
+            value={value}
+            onChangeText={(text) => handleChange(field.name, text)}
+            type={field.type}
+            options={field.options || []}
+            multiple={field.multiple}
+          />
+        );
+      })}
 
       <CustomButton onPress={handleSubmit} style={styles.button}>
         {id ? "Atualizar" : "Salvar"}

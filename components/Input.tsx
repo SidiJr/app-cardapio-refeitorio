@@ -6,14 +6,14 @@ import {
   StyleSheet,
   TextInputProps,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 
 type InputProps = {
   label: string;
-  value: string;
-  onChangeText: (text: string) => void;
+  value: string | string[];
+  onChangeText: (text: string | string[]) => void;
   type?: "text" | "number" | "date" | "select";
   options?: { label: string; value: string }[];
+  multiple?: boolean;
 } & TextInputProps;
 
 export default function Input({
@@ -22,9 +22,9 @@ export default function Input({
   onChangeText,
   type = "text",
   options = [],
+  multiple = false,
   ...props
 }: InputProps) {
-
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
@@ -46,22 +46,62 @@ export default function Input({
           keyboardType="numeric"
           {...props}
         />
-      ) : type === "select" ? (
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={value}
-            onValueChange={onChangeText}
-            style={styles.picker}
-          >
-            <Picker.Item label="Selecione uma opção" value="" />
-            {options.map((option) => (
-              <Picker.Item
-                key={option.value}
-                label={option.label}
-                value={option.value}
+      ) : type === "select" && !multiple ? (
+        <select
+          value={typeof value === "string" ? value : ""}
+          onChange={(e) => onChangeText(e.target.value)}
+          style={
+            {
+              ...styles.input,
+              height: 44,
+              fontSize: 16,
+              padding: 8,
+            } as any
+          }
+        >
+          <option value="">Selecione...</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ) : type === "select" && multiple ? (
+        <View
+          style={{
+            borderWidth: 1,
+            borderColor: "#ccc",
+            borderRadius: 8,
+            padding: 8,
+            backgroundColor: "#fff",
+          }}
+        >
+          {options.map((option) => (
+            <View
+              key={option.value}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 4,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={Array.isArray(value) && value.includes(option.value)}
+                onChange={(e) => {
+                  let newValue = Array.isArray(value) ? [...value] : [];
+                  if (e.target.checked) {
+                    newValue.push(option.value);
+                  } else {
+                    newValue = newValue.filter((v) => v !== option.value);
+                  }
+                  onChangeText(newValue);
+                }}
+                style={{ marginRight: 8 }}
               />
-            ))}
-          </Picker>
+              <Text>{option.label}</Text>
+            </View>
+          ))}
         </View>
       ) : (
         <TextInput
